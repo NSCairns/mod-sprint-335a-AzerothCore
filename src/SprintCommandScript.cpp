@@ -27,7 +27,7 @@ public:
             return false;
 
         Player* player = handler->GetSession()->GetPlayer();
-        if (!player || player->IsMounted())
+        if (!player)
             return false;
 
         if (sSprintManager->GetStamina(player) <= 0.0f)
