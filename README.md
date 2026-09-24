@@ -7,4 +7,12 @@ Sprint is a modifier, so it stacks on top of speed, hopefully on mounts? havent 
 
 The conf file can change speedmultiplier and maxstamina.
 
+Installation Instructions:
+
+Download zip and extract as mod-sprint directory inside of the module directory in Azerothcore/Modules
+
+Compile AzerothCore as usual
+
+Move ModSprintUI folder to Interfaces/Addons in the 3.3.5a wrath client
+
 License: GNU Affero General Public License v3.0
