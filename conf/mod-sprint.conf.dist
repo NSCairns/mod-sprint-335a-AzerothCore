@@ -1,0 +1,45 @@
+[worldserver]
+
+#
+#    Mod Sprinting Configuration
+#
+
+#
+#    Sprint.Enabled
+#        Description: Enable or disable the sprint module.
+#        Default:     true
+#
+
+Sprint.Enabled = true
+
+#
+#    Sprint.MaxStamina
+#        Description: Maximum global stamina pool for all players.
+#        Default:     100.0
+#
+
+Sprint.MaxStamina = 100.0
+
+#
+#    Sprint.SpeedMultiplier.OnFoot
+#        Description: Speed bonus added while sprinting on foot (0.5 = 50% faster than normal running).
+#        Default:     0.5
+#
+
+Sprint.SpeedMultiplier.OnFoot = 0.5
+
+#
+#    Sprint.SpeedMultiplier.GroundMount
+#        Description: Speed bonus added while sprinting on a ground mount (0.7 = 70% faster than normal ground mount speed).
+#        Default:     0.7
+#
+
+Sprint.SpeedMultiplier.GroundMount = 0.7
+
+#
+#    Sprint.SpeedMultiplier.FlyingMount
+#        Description: Speed bonus added while sprinting on a flying mount (0.4 = 40% faster than normal flight speed).
+#        Default:     0.4
+#
+
+Sprint.SpeedMultiplier.FlyingMount = 0.4
