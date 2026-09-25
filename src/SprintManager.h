@@ -19,11 +19,12 @@ public:
         if (!player)
             return;
 
-        ObjectGuid guid = player->GetGUID();
-        if (_playerStamina.find(guid) == _playerStamina.end())
+        uint32 lowGuid = player->GetGUID().GetCounter();
+        if (_playerStamina.find(lowGuid) == _playerStamina.end())
         {
-            _playerStamina[guid] = sSprintConfig->GetMaxStamina();
-            _playerSprinting[guid] = false;
+            _playerStamina[lowGuid] = sSprintConfig->GetMaxStamina();
+            _playerSprinting[lowGuid] = false;
+            _originalSpeed[lowGuid] = 1.0f;
         }
     }
 
@@ -33,7 +34,7 @@ public:
             return 0.0f;
 
         InitializePlayer(player);
-        return _playerStamina[player->GetGUID()];
+        return _playerStamina[player->GetGUID().GetCounter()];
     }
 
     void SetStamina(Player* player, float amount)
@@ -41,13 +42,13 @@ public:
         if (!player)
             return;
 
-        ObjectGuid guid = player->GetGUID();
+        uint32 lowGuid = player->GetGUID().GetCounter();
         float maxStam = sSprintConfig->GetMaxStamina();
 
         if (amount < 0.0f) amount = 0.0f;
         if (amount > maxStam) amount = maxStam;
 
-        _playerStamina[guid] = amount;
+        _playerStamina[lowGuid] = amount;
     }
 
     bool IsSprinting(Player* player)
@@ -56,17 +57,50 @@ public:
             return false;
 
         InitializePlayer(player);
-        return _playerSprinting[player->GetGUID()];
+        return _playerSprinting[player->GetGUID().GetCounter()];
     }
 
     void SetSprinting(Player* player, bool sprinting)
     {
+        if (sprinting)
+            StartSprint(player);
+        else
+            StopSprint(player);
+    }
+
+    void StartSprint(Player* player)
+    {
         if (!player)
             return;
 
+        uint32 lowGuid = player->GetGUID().GetCounter();
         InitializePlayer(player);
-        _playerSprinting[player->GetGUID()] = sprinting;
+
+        if (!_playerSprinting[lowGuid])
+        {
+            _playerSprinting[lowGuid] = true;
+            _originalSpeed[lowGuid] = player->GetSpeedRate(MOVE_RUN);
+
+            float sprintBonus = sSprintConfig->GetSpeedMultiplier();
+            player->SetSpeed(MOVE_RUN, _originalSpeed[lowGuid] + sprintBonus, true);
+        }
     }
+
+    void StopSprint(Player* player)
+    {
+        if (!player)
+            return;
+
+        uint32 lowGuid = player->GetGUID().GetCounter();
+        InitializePlayer(player);
+
+        if (_playerSprinting[lowGuid])
+        {
+            _playerSprinting[lowGuid] = false;
+            player->SetSpeed(MOVE_RUN, _originalSpeed[lowGuid], true);
+        }
+    }
+
     void SendStaminaUpdate(Player* player)
     {
         if (!player || !player->GetSession())
@@ -82,8 +116,9 @@ public:
     }
 
 private:
-    std::unordered_map<ObjectGuid, float> _playerStamina;
-    std::unordered_map<ObjectGuid, bool> _playerSprinting;
+    std::unordered_map<uint32, float> _playerStamina;
+    std::unordered_map<uint32, bool> _playerSprinting;
+    std::unordered_map<uint32, float> _originalSpeed;
 };
 
 #define sSprintManager SprintManager::GetInstance()

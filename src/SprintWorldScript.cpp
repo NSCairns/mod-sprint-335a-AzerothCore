@@ -1,81 +1,64 @@
 #include "ScriptMgr.h"
+#include "Player.h"
+#include "World.h"
+#include "WorldSession.h"
+#include "WorldSessionMgr.h"
 #include "SprintConfig.h"
 #include "SprintManager.h"
-#include "WorldSessionMgr.h"
-#include "WorldSession.h"
-#include "Player.h"
 #include "Chat.h"
 
 class SprintWorldScript : public WorldScript
 {
-private:
-    uint32 _updateTimer = 500; // Run tick every 500ms
-
 public:
     SprintWorldScript() : WorldScript("SprintWorldScript") {}
 
-    void OnAfterConfigLoad(bool /*reload*/) override
-    {
-        sSprintConfig->LoadConfig();
-    }
-
     void OnUpdate(uint32 diff) override
     {
-        if (_updateTimer <= diff)
+        if (!sSprintConfig->IsEnabled())
+            return;
+
+        WorldSessionMgr::SessionMap const& sessionMap = sWorldSessionMgr->GetAllSessions();
+        for (auto itr = sessionMap.begin(); itr != sessionMap.end(); ++itr)
         {
-            _updateTimer = 500;
-
-            auto const& sessions = sWorldSessionMgr->GetAllSessions();
-            for (auto const& pair : sessions)
+            if (Player* player = itr->second->GetPlayer())
             {
-                WorldSession* session = pair.second;
-                if (!session)
+                if (!player->IsInWorld())
                     continue;
 
-                Player* player = session->GetPlayer();
-                if (!player || !player->IsInWorld() || player->IsGameMaster())
-                    continue;
+                const float drainRate = 25.0f; // Drains 25% per second
+                const float regenRate = 20.0f; // Regens 20% per second
 
-                bool isSprinting = sSprintManager->IsSprinting(player);
-                float currentStam = sSprintManager->GetStamina(player);
-                float maxStam = sSprintConfig->GetMaxStamina();
-
-                if (isSprinting)
+                if (sSprintManager->IsSprinting(player))
                 {
-                    float drainAmount = 10.0f; // 10 stamina per 500ms tick
-                    float newStam = currentStam - drainAmount;
+                    float currentStamina = sSprintManager->GetStamina(player);
 
-                    if (newStam <= 0.0f)
+                    if (currentStamina <= 0.0f)
                     {
-                        newStam = 0.0f;
-                        sSprintManager->SetSprinting(player, false);
-                        player->SetSpeed(MOVE_RUN, 1.0f, true);
-
-                        if (player->GetSession())
-                            ChatHandler(player->GetSession()).SendSysMessage("Exhausted! Sprint deactivated.");
+                        sSprintManager->StopSprint(player);
+                        ChatHandler(player->GetSession()).SendSysMessage("You are out of stamina!");
+                        sSprintManager->SendStaminaUpdate(player);
+                        continue;
                     }
 
-                    sSprintManager->SetStamina(player, newStam);
+                    float drainAmount = drainRate * (static_cast<float>(diff) / 1000.0f);
+                    float newStamina = currentStamina - drainAmount;
+                    sSprintManager->SetStamina(player, newStamina);
                     sSprintManager->SendStaminaUpdate(player);
                 }
                 else
                 {
-                    if (currentStam < maxStam)
-                    {
-                        float regenAmount = 7.5f; // 7.5 stamina per 500ms tick
-                        float newStam = currentStam + regenAmount;
-                        if (newStam > maxStam)
-                            newStam = maxStam;
+                    float currentStamina = sSprintManager->GetStamina(player);
+                    float maxStamina = sSprintConfig->GetMaxStamina();
 
-                        sSprintManager->SetStamina(player, newStam);
+                    if (currentStamina < maxStamina)
+                    {
+                        float regenAmount = regenRate * (static_cast<float>(diff) / 1000.0f);
+                        float newStamina = std::min(maxStamina, currentStamina + regenAmount);
+                        sSprintManager->SetStamina(player, newStamina);
                         sSprintManager->SendStaminaUpdate(player);
                     }
                 }
             }
-        }
-        else
-        {
-            _updateTimer -= diff;
         }
     }
 };

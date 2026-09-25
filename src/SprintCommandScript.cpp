@@ -31,10 +31,9 @@ public:
             return false;
 
         if (sSprintManager->GetStamina(player) <= 0.0f)
-            return false;
+            return true; // Block quietly without error spam
 
-        sSprintManager->SetSprinting(player, true);
-        player->SetSpeed(MOVE_RUN, sSprintConfig->GetSpeedMultiplier(), true);
+            sSprintManager->StartSprint(player);
         return true;
     }
 
@@ -47,8 +46,7 @@ public:
         if (!player)
             return false;
 
-        sSprintManager->SetSprinting(player, false);
-        player->SetSpeed(MOVE_RUN, 1.0f, true);
+        sSprintManager->StopSprint(player);
         return true;
     }
 };
