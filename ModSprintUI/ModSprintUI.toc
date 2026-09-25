@@ -1,6 +1,0 @@
-## Interface: 30300
-## Title: ModSprintUI
-## Notes: Custom UI bar for AzerothCore sprint system
-## SavedVariables: SprintBarDB
-
-ModSprintUI.lua
