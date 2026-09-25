@@ -23,3 +23,4 @@ void AddPlayerSprintHandler()
 {
     new PlayerSprintHandler();
 }
+
