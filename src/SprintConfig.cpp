@@ -13,3 +13,4 @@ void SprintConfig::LoadConfig()
     _maxStamina = sConfigMgr->GetOption<float>("Sprint.MaxStamina", 100.0f);
     _speedMultiplier = sConfigMgr->GetOption<float>("Sprint.SpeedMultiplier", 1.5f);
 }
+
